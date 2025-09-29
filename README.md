@@ -1,6 +1,6 @@
 # 🏗️ Patrones de Arquitectura de Software en PHP
 
-Este repositorio contiene implementaciones prácticas de dos importantes patrones arquitectónicos en PHP: **MVC (Modelo-Vista-Controlador)** y **Arquitectura Hexagonal (Ports and Adapters)**. Cada implementación incluye ejemplos funcionales, documentación detallada y diagramas explicativos.
+Este repositorio contiene implementaciones prácticas de tres importantes patrones arquitectónicos en PHP: **MVC (Modelo-Vista-Controlador)**, **Arquitectura Hexagonal (Ports and Adapters)** y **Clean Architecture (Arquitectura Limpia)**. Cada implementación incluye ejemplos funcionales, documentación detallada y diagramas explicativos.
 
 ## 📋 Tabla de Contenidos
 
@@ -16,16 +16,22 @@ Este repositorio contiene implementaciones prácticas de dos importantes patrone
   - [Diagrama de Arquitectura](#diagrama-de-arquitectura-hexagonal)
   - [Flujo de Datos](#flujo-de-datos-hexagonal)
   - [Implementación](#implementación-hexagonal)
+- [🏛️ Clean Architecture](#️-clean-architecture)
+  - [Concepto y Filosofía](#concepto-y-filosofía-clean)
+  - [Las 4 Capas](#las-4-capas-clean)
+  - [Flujo de Datos](#flujo-de-datos-clean)
+  - [Implementación](#implementación-clean)
 - [⚖️ Comparación de Patrones](#️-comparación-de-patrones)
 - [🚀 Cómo Ejecutar los Proyectos](#-cómo-ejecutar-los-proyectos)
 - [📚 Recursos y Referencias](#-recursos-y-referencias)
 
 ## 🎯 Objetivo del Proyecto
 
-Este proyecto educativo tiene como objetivo demostrar de manera práctica y visual las diferencias, ventajas y casos de uso de dos patrones arquitectónicos fundamentales en el desarrollo de software:
+Este proyecto educativo tiene como objetivo demostrar de manera práctica y visual las diferencias, ventajas y casos de uso de tres patrones arquitectónicos fundamentales en el desarrollo de software:
 
 - **MVC**: Ideal para aplicaciones web tradicionales con interfaz de usuario
 - **Arquitectura Hexagonal**: Perfecta para APIs, microservicios y aplicaciones con alta testabilidad
+- **Clean Architecture**: Excelente para sistemas empresariales complejos con lógica de negocio crítica
 
 ## 📁 Estructura del Repositorio
 
@@ -46,6 +52,14 @@ PATRONES/
 │   │   └── 📂 Infrastructure/ # Capa de infraestructura
 │   ├── 📂 public/           # API REST
 │   └── 📄 README.md         # Documentación específica Hexagonal
+├── 📂 clean-architecture/    # Implementación Clean Architecture
+│   ├── 📂 src/              # Código fuente
+│   │   ├── 📂 Entities/     # Capa 1: Entidades
+│   │   ├── 📂 UseCases/     # Capa 2: Casos de Uso
+│   │   ├── 📂 InterfaceAdapters/ # Capa 3: Adaptadores
+│   │   └── 📂 FrameworksAndDrivers/ # Capa 4: Frameworks
+│   ├── 📂 public/           # API REST de tareas
+│   └── 📄 README.md         # Documentación específica Clean Architecture
 └── 📄 README.md             # Este archivo (documentación general)
 ```
 
@@ -394,25 +408,238 @@ class UserController
 
 ---
 
+## 🏛️ Clean Architecture
+
+### Concepto y Filosofía Clean
+
+**Clean Architecture**, propuesta por Robert C. Martin (Uncle Bob), es una evolución de conceptos arquitectónicos que enfatiza la **separación de responsabilidades** mediante capas concéntricas. Su objetivo principal es crear sistemas que sean independientes de frameworks, UI, bases de datos y agentes externos.
+
+#### 🎯 Principios Fundamentales:
+- **Independencia de Frameworks**: No depende de librerías externas
+- **Testeable**: Fácil de probar sin UI, base de datos o servicios externos
+- **Independiente de UI**: La UI puede cambiar sin afectar el resto
+- **Independiente de Base de Datos**: Puedes cambiar de tecnología sin problemas
+- **Independiente de Agentes Externos**: Las reglas de negocio no conocen el mundo exterior
+
+### Las 4 Capas Clean
+
+```mermaid
+graph TB
+    subgraph "🏛️ CLEAN ARCHITECTURE - CAPAS CONCÉNTRICAS"
+        subgraph "🔧 Capa 4: Frameworks & Drivers"
+            WEB[🌐 Web Server<br/>Apache/Nginx]
+            DB[🗄️ Database<br/>MySQL/PostgreSQL]
+            EXT[🔌 External APIs<br/>Third-party Services]
+        end
+        
+        subgraph "🔌 Capa 3: Interface Adapters"
+            CTRL[🎮 Controllers<br/>HTTP Handlers]
+            PRES[📄 Presenters<br/>Response Formatters]
+            GATE[🚪 Gateways<br/>Repository Implementations]
+        end
+        
+        subgraph "📋 Capa 2: Use Cases"
+            UC1[📋 CreateTaskUseCase<br/>Application Logic]
+            UC2[📋 UpdateTaskUseCase<br/>Business Rules]
+            UC3[📋 ListTasksUseCase<br/>Orchestration]
+            PORT[🔌 Ports<br/>Interfaces/Contracts]
+        end
+        
+        subgraph "🏛️ Capa 1: Entities"
+            ENT[🏛️ Task Entity<br/>Core Business Rules]
+            VO[💎 Value Objects<br/>TaskStatus, TaskPriority]
+        end
+    end
+    
+    WEB --> CTRL
+    DB --> GATE
+    EXT --> GATE
+    
+    CTRL --> UC1
+    CTRL --> UC2
+    CTRL --> UC3
+    PRES --> CTRL
+    GATE --> PORT
+    
+    UC1 --> ENT
+    UC2 --> ENT
+    UC3 --> ENT
+    UC1 --> PORT
+    UC2 --> PORT
+    UC3 --> PORT
+    
+    ENT --> VO
+    
+    style ENT fill:#e8f5e8
+    style UC1 fill:#e1f5fe
+    style UC2 fill:#e1f5fe
+    style UC3 fill:#e1f5fe
+    style CTRL fill:#f3e5f5
+    style WEB fill:#fff3e0
+```
+
+### Flujo de Datos Clean
+
+```mermaid
+sequenceDiagram
+    participant HTTP as 🌐 HTTP Request
+    participant CTRL as 🎮 TaskController
+    participant UC as 📋 CreateTaskUseCase
+    participant ENT as 🏛️ Task Entity
+    participant PORT as 🔌 Repository Port
+    participant REPO as 🗄️ Repository Impl
+    participant PRES as 📄 JsonPresenter
+    
+    Note over HTTP,PRES: Flujo Clean Architecture - Crear Tarea
+    
+    HTTP->>+CTRL: POST /tasks {data}
+    Note right of HTTP: Capa 4: Framework
+    
+    CTRL->>CTRL: Convertir HTTP a DTO
+    CTRL->>+UC: execute(CreateTaskInputData)
+    Note right of CTRL: Capa 3: Interface Adapter
+    
+    UC->>UC: Validar datos aplicación
+    UC->>+ENT: new Task(id, title, desc)
+    Note right of UC: Capa 2: Use Case
+    
+    ENT->>ENT: Aplicar reglas de negocio
+    ENT->>ENT: Validar invariantes
+    ENT-->>-UC: Task válida
+    Note right of ENT: Capa 1: Entity (Núcleo)
+    
+    UC->>+PORT: save(task)
+    PORT->>+REPO: save(task)
+    Note right of PORT: Inversión de dependencia
+    
+    REPO->>REPO: Persistir datos
+    REPO-->>-PORT: Task guardada
+    PORT-->>-UC: Task persistida
+    
+    UC-->>-CTRL: CreateTaskOutputData
+    CTRL->>+PRES: presentTask(outputData)
+    
+    PRES->>PRES: Formatear JSON
+    PRES-->>-CTRL: JSON Response
+    CTRL-->>-HTTP: HTTP 201 Created
+    
+    Note over HTTP,PRES: Dependencias apuntan hacia adentro
+```
+
+### Implementación Clean
+
+#### 🏛️ **Capa 1: Entities (Núcleo del Negocio)**
+```php
+// src/Entities/Task.php
+class Task {
+    private TaskStatus $status;
+    
+    public function markAsCompleted(): void {
+        if ($this->status === TaskStatus::COMPLETED) {
+            throw new DomainException("Tarea ya completada");
+        }
+        $this->status = TaskStatus::COMPLETED;
+        $this->updatedAt = new DateTime();
+    }
+    
+    public function isOverdue(): bool {
+        return $this->dueDate && 
+               $this->dueDate < new DateTime() && 
+               $this->status !== TaskStatus::COMPLETED;
+    }
+}
+```
+
+#### 📋 **Capa 2: Use Cases (Lógica de Aplicación)**
+```php
+// src/UseCases/CreateTask/CreateTaskUseCase.php
+class CreateTaskUseCase {
+    public function __construct(
+        private TaskRepositoryInterface $repository
+    ) {}
+    
+    public function execute(CreateTaskInputData $input): CreateTaskOutputData {
+        // 1. Validaciones de aplicación
+        $this->validateInput($input);
+        
+        // 2. Crear entidad (reglas de negocio)
+        $task = new Task(
+            $this->repository->getNextId(),
+            $input->title,
+            $input->description
+        );
+        
+        // 3. Persistir usando puerto
+        $savedTask = $this->repository->save($task);
+        
+        // 4. Retornar DTO de salida
+        return CreateTaskOutputData::fromTask($savedTask);
+    }
+}
+```
+
+#### 🔌 **Capa 3: Interface Adapters (Conversión)**
+```php
+// src/InterfaceAdapters/Controllers/TaskController.php
+class TaskController {
+    public function createTask(): void {
+        // 1. Convertir HTTP a DTO
+        $data = $this->getJsonInput();
+        $inputData = new CreateTaskInputData(
+            $data['title'], 
+            $data['description']
+        );
+        
+        // 2. Ejecutar caso de uso
+        $result = $this->createTaskUseCase->execute($inputData);
+        
+        // 3. Presentar respuesta
+        $this->presenter->presentTask($result, 201);
+    }
+}
+```
+
+#### 🔧 **Capa 4: Frameworks & Drivers (Infraestructura)**
+```php
+// src/FrameworksAndDrivers/Config/Container.php
+class Container {
+    private function registerServices(): void {
+        // Configurar dependencias
+        $this->services[TaskRepositoryInterface::class] = 
+            fn() => new InMemoryTaskRepository();
+            
+        $this->services[CreateTaskUseCase::class] = 
+            fn($c) => new CreateTaskUseCase(
+                $c->get(TaskRepositoryInterface::class)
+            );
+    }
+}
+```
+
+---
+
 ## ⚖️ Comparación de Patrones
 
 ### 📊 Tabla Comparativa
 
-| Aspecto | 🎮 MVC | 🔷 Hexagonal |
-|---------|--------|--------------|
-| **Propósito Principal** | Separar presentación de lógica | Aislar dominio de infraestructura |
-| **Complejidad** | ⭐⭐ Baja-Media | ⭐⭐⭐⭐ Media-Alta |
-| **Curva de Aprendizaje** | ⭐⭐ Fácil | ⭐⭐⭐⭐ Moderada |
-| **Testabilidad** | ⭐⭐⭐ Buena | ⭐⭐⭐⭐⭐ Excelente |
-| **Flexibilidad** | ⭐⭐⭐ Buena | ⭐⭐⭐⭐⭐ Excelente |
-| **Casos de Uso Ideales** | Aplicaciones web tradicionales | APIs, microservicios, sistemas complejos |
-| **Dependencias** | Vista depende del Modelo | Infraestructura depende del Dominio |
-| **Inversión de Control** | ⭐⭐ Parcial | ⭐⭐⭐⭐⭐ Completa |
+| Aspecto | 🎮 MVC | 🔷 Hexagonal | 🏛️ Clean Architecture |
+|---------|--------|--------------|---------------------|
+| **Propósito Principal** | Separar presentación de lógica | Aislar dominio de infraestructura | Independencia total de frameworks |
+| **Complejidad** | ⭐⭐ Baja-Media | ⭐⭐⭐⭐ Media-Alta | ⭐⭐⭐⭐⭐ Muy Alta |
+| **Curva de Aprendizaje** | ⭐⭐ Fácil | ⭐⭐⭐⭐ Moderada | ⭐⭐⭐⭐⭐ Muy Alta |
+| **Testabilidad** | ⭐⭐⭐ Buena | ⭐⭐⭐⭐⭐ Excelente | ⭐⭐⭐⭐⭐ Excelente |
+| **Flexibilidad** | ⭐⭐⭐ Buena | ⭐⭐⭐⭐⭐ Excelente | ⭐⭐⭐⭐⭐ Excelente |
+| **Mantenibilidad** | ⭐⭐⭐ Buena | ⭐⭐⭐⭐ Muy Buena | ⭐⭐⭐⭐⭐ Excelente |
+| **Casos de Uso Ideales** | Apps web tradicionales | APIs, microservicios | Sistemas empresariales complejos |
+| **Dependencias** | Vista depende del Modelo | Infraestructura → Dominio | Todas apuntan hacia adentro |
+| **Inversión de Control** | ⭐⭐ Parcial | ⭐⭐⭐⭐⭐ Completa | ⭐⭐⭐⭐⭐ Completa |
+| **Separación de Capas** | 3 capas básicas | 3 capas + puertos | 4 capas concéntricas |
+| **Independencia de DB** | ⭐⭐ Limitada | ⭐⭐⭐⭐⭐ Total | ⭐⭐⭐⭐⭐ Total |
 
 ### 🎯 Cuándo Usar Cada Patrón
 
 ```mermaid
-graph LR
+graph TB
     subgraph "🎮 Usar MVC Cuando..."
         MVC1[📱 Aplicaciones Web<br/>con UI tradicional]
         MVC2[⚡ Desarrollo Rápido<br/>es prioritario]
@@ -424,8 +651,17 @@ graph LR
         HEX1[🔌 APIs REST<br/>y Microservicios]
         HEX2[🧪 Testing Extensivo<br/>es crítico]
         HEX3[🔄 Múltiples Interfaces<br/>de entrada/salida]
-        HEX4[🏛️ Lógica de Dominio<br/>compleja]
+        HEX4[🏛️ Lógica de Dominio<br/>moderadamente compleja]
         HEX5[🔧 Cambios Frecuentes<br/>de infraestructura]
+    end
+    
+    subgraph "🏛️ Usar Clean Architecture Cuando..."
+        CLEAN1[🏢 Sistemas Empresariales<br/>de gran escala]
+        CLEAN2[🧠 Lógica de Negocio<br/>muy compleja]
+        CLEAN3[👥 Equipos Grandes<br/>multidisciplinarios]
+        CLEAN4[📈 Proyectos de<br/>larga duración (5+ años)]
+        CLEAN5[🔄 Múltiples Tecnologías<br/>y cambios frecuentes]
+        CLEAN6[🧪 Testing Exhaustivo<br/>y TDD estricto]
     end
     
     style MVC1 fill:#e1f5fe
@@ -438,6 +674,13 @@ graph LR
     style HEX3 fill:#e8f5e8
     style HEX4 fill:#e8f5e8
     style HEX5 fill:#e8f5e8
+    
+    style CLEAN1 fill:#fff3e0
+    style CLEAN2 fill:#fff3e0
+    style CLEAN3 fill:#fff3e0
+    style CLEAN4 fill:#fff3e0
+    style CLEAN5 fill:#fff3e0
+    style CLEAN6 fill:#fff3e0
 ```
 
 ### 🔄 Evolución Arquitectónica
@@ -447,23 +690,33 @@ graph TD
     START[🚀 Nuevo Proyecto] --> SIMPLE{¿Aplicación Simple?}
     
     SIMPLE -->|Sí| MVC[🎮 Comenzar con MVC<br/>Desarrollo rápido<br/>Menor complejidad]
-    SIMPLE -->|No| COMPLEX{¿Lógica Compleja?}
+    SIMPLE -->|No| COMPLEX{¿Lógica Muy Compleja?}
     
-    COMPLEX -->|Sí| HEX[🔷 Usar Hexagonal<br/>Desde el inicio<br/>Mejor a largo plazo]
-    COMPLEX -->|No| MVC
+    COMPLEX -->|Sí| ENTERPRISE{¿Sistema Empresarial?}
+    COMPLEX -->|No| HEX[🔷 Usar Hexagonal<br/>Balance perfecto]
+    
+    ENTERPRISE -->|Sí| CLEAN[🏛️ Clean Architecture<br/>Máxima robustez<br/>Largo plazo]
+    ENTERPRISE -->|No| HEX
     
     MVC --> GROW{¿Aplicación Crece?}
-    GROW -->|Sí| MIGRATE[🔄 Migrar a Hexagonal<br/>Refactoring gradual]
+    GROW -->|Sí| MIGRATE1[🔄 Migrar a Hexagonal<br/>Refactoring gradual]
     GROW -->|No| MAINTAIN[✅ Mantener MVC<br/>Si funciona bien]
     
-    MIGRATE --> HEX
-    HEX --> SUCCESS[🎯 Aplicación Escalable<br/>y Mantenible]
-    MAINTAIN --> SUCCESS
+    MIGRATE1 --> HEX
+    HEX --> SCALE{¿Necesita más Escalabilidad?}
+    SCALE -->|Sí| MIGRATE2[🔄 Evolucionar a Clean<br/>Refactoring avanzado]
+    SCALE -->|No| SUCCESS1[🎯 Aplicación Escalable]
+    
+    MIGRATE2 --> CLEAN
+    CLEAN --> SUCCESS2[🎯 Sistema Empresarial<br/>Robusto y Mantenible]
+    MAINTAIN --> SUCCESS1
     
     style START fill:#fff3e0
     style MVC fill:#e1f5fe
     style HEX fill:#e8f5e8
-    style SUCCESS fill:#e8f5e8
+    style CLEAN fill:#fff3e0
+    style SUCCESS1 fill:#e8f5e8
+    style SUCCESS2 fill:#fff3e0
 ```
 
 ---
@@ -539,6 +792,66 @@ curl -X PUT http://localhost/LEARN/PATRONES/hexagonal/public/users/1 \
 curl -X DELETE http://localhost/LEARN/PATRONES/hexagonal/public/users/1
 ```
 
+### 🏛️ Ejecutar API Clean Architecture
+
+```bash
+# 1. Navegar al directorio Clean Architecture
+cd /Applications/MAMP/htdocs/LEARN/PATRONES/clean-architecture
+
+# 2. Acceder a la API
+http://localhost/LEARN/PATRONES/clean-architecture/public/
+
+# 3. Endpoints disponibles:
+# GET    /tasks              - Listar todas las tareas
+# GET    /tasks?status=pending - Filtrar por estado
+# GET    /tasks/{id}         - Obtener tarea específica
+# POST   /tasks              - Crear nueva tarea
+# PUT    /tasks/{id}         - Actualizar tarea
+# DELETE /tasks/{id}         - Eliminar tarea
+# GET    /tasks/statistics   - Estadísticas generales
+# GET    /tasks/overdue      - Tareas vencidas
+```
+
+#### 🧪 Probar la API Clean Architecture:
+
+```bash
+# Crear tarea
+curl -X POST http://localhost/LEARN/PATRONES/clean-architecture/public/tasks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Implementar Clean Architecture",
+    "description": "Desarrollar sistema de tareas con Clean Architecture",
+    "priority": "high",
+    "due_date": "2024-12-31 23:59:59"
+  }'
+
+# Obtener todas las tareas
+curl http://localhost/LEARN/PATRONES/clean-architecture/public/tasks
+
+# Obtener estadísticas
+curl http://localhost/LEARN/PATRONES/clean-architecture/public/tasks/statistics
+
+# Actualizar tarea (marcar como en progreso)
+curl -X PUT http://localhost/LEARN/PATRONES/clean-architecture/public/tasks/1 \
+  -H "Content-Type: application/json" \
+  -d '{"status": "in_progress"}'
+
+# Obtener tareas vencidas
+curl http://localhost/LEARN/PATRONES/clean-architecture/public/tasks/overdue
+
+# Ejecutar script de pruebas completo
+php test_api.php
+```
+
+#### 🌟 Características de la API Clean Architecture:
+- ✅ **Gestión completa de tareas** (CRUD)
+- ✅ **Estados de tareas** (pending, in_progress, completed, cancelled)
+- ✅ **Prioridades** (low, medium, high, urgent)
+- ✅ **Fechas de vencimiento** y detección de tareas vencidas
+- ✅ **Estadísticas** en tiempo real
+- ✅ **Validaciones de dominio** robustas
+- ✅ **Reglas de negocio** aplicadas automáticamente
+
 ### 🔧 Configuración del Servidor
 
 #### Apache (.htaccess)
@@ -591,16 +904,32 @@ location / {
 - ✅ Desarrollo rápido y prototipado
 - ✅ Equipos con experiencia limitada en arquitectura
 - ✅ Proyectos con lógica de negocio simple
+- ✅ Startups y MVPs que necesitan velocidad
 
 ### 🔷 Hexagonal es Ideal Para:
 - ✅ APIs REST y microservicios
-- ✅ Aplicaciones con lógica de dominio compleja
+- ✅ Aplicaciones con lógica de dominio moderadamente compleja
 - ✅ Sistemas que requieren alta testabilidad
 - ✅ Proyectos que cambiarán de infraestructura frecuentemente
+- ✅ Balance perfecto entre simplicidad y robustez
+
+### 🏛️ Clean Architecture es Ideal Para:
+- ✅ Sistemas empresariales de gran escala
+- ✅ Aplicaciones con lógica de negocio muy compleja
+- ✅ Proyectos de larga duración (5+ años)
+- ✅ Equipos grandes y multidisciplinarios
+- ✅ Sistemas críticos que requieren máxima robustez
+- ✅ Aplicaciones que cambiarán múltiples tecnologías
 
 ### 🚀 Recomendación Final
 
-**Comienza simple, evoluciona cuando sea necesario.** Si tu proyecto es pequeño y directo, MVC te dará resultados rápidos. Si anticipas complejidad o necesitas máxima flexibilidad, invierte en Hexagonal desde el principio.
+**La arquitectura debe evolucionar con tu proyecto:**
+
+1. **🎮 Comienza con MVC** si necesitas velocidad y simplicidad
+2. **🔷 Migra a Hexagonal** cuando la complejidad y testabilidad se vuelvan importantes
+3. **🏛️ Evoluciona a Clean Architecture** para sistemas empresariales complejos
+
+**Recuerda:** No hay una arquitectura perfecta para todos los casos. La mejor arquitectura es la que resuelve tus problemas específicos sin agregar complejidad innecesaria.
 
 ---
 
