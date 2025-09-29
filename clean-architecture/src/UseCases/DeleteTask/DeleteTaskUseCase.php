@@ -34,3 +34,4 @@ class DeleteTaskUseCase
         return $this->taskRepository->delete($taskId);
     }
 }
+

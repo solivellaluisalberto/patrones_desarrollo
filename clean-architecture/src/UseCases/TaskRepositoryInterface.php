@@ -23,3 +23,4 @@ interface TaskRepositoryInterface
     public function countByStatus(string $status): int;
     public function getNextId(): int;
 }
+

@@ -29,3 +29,4 @@ class GetTaskUseCase
         return CreateTaskOutputData::fromTask($task);
     }
 }
+

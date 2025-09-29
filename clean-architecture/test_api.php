@@ -150,3 +150,4 @@ if ($response['body']['success']) {
 
 echo "\n🎉 Pruebas completadas!\n";
 echo "💡 Tip: Puedes usar herramientas como Postman o curl para probar la API manualmente.\n";
+

@@ -53,3 +53,4 @@ class UpdateTaskInputData
         ], fn($value) => $value !== null);
     }
 }
+

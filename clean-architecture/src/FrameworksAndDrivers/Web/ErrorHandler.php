@@ -70,3 +70,4 @@ class ErrorHandler
         return $_ENV['APP_ENV'] ?? 'development' === 'development';
     }
 }
+
